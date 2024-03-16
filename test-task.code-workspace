@@ -14,7 +14,7 @@
             },
             {
                 "name": "Local env",
-                "path": "local-end"
+                "path": "local-env"
             },
     ],
     "settings": {
