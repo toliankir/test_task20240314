@@ -5,14 +5,15 @@
 ### Clone the repository
 ```shell
 git clone --branch master git@github.com:toliankir/test_task20240314.git
-cd test_task04032024
+cd test_task20240314
 ```
 
 ### Initialize worktree by execute following commands
 ```shell
 git worktree add backend backend-master
 git worktree add frontend frontend-master
-git worktree add backend doc
+git worktree add doc doc
+git worktree add local-env local-env
 ```
 
 ### Open VSCode Workspace
