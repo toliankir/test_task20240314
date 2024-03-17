@@ -4,7 +4,7 @@
 
 ### Clone the repository
 ```shell
-git clone --branch master git@github.com:toliankir/test_task20240314.git
+git clone --branch workspace git@github.com:toliankir/test_task20240314.git
 cd test_task20240314
 ```
 
