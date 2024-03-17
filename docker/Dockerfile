@@ -44,7 +44,6 @@ USER node
 
 FROM nginx As production
 
-COPY --chown=node:node --from=build /usr/src/app/public /usr/share/nginx/html/public
-COPY --chown=node:node --from=build /usr/src/app/index.html /usr/share/nginx/html/index.html
+COPY --chown=node:node --from=build /usr/src/app/dist /usr/share/nginx/html
 
 EXPOSE 80
