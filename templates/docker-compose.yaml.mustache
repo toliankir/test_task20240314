@@ -1,0 +1,58 @@
+version: "3.9"
+
+networks:
+  default:
+    name: "test-task-local-tier"
+
+volumes:
+  # Unused stub volume to prevent error "volumes must be a mapping" when all volumes disabled
+  stub:
+{{#MYSQL_USEDATAVOLUME}}
+  mysql-data:
+{{/MYSQL_USEDATAVOLUME}}
+
+services:
+#
+#  ___          __                   _                       _                     
+# |_ _| _ __   / _| _ __  __ _  ___ | |_  _ __  _   _   ___ | |_  _   _  _ __  ___ 
+#  | | | '_ \ | |_ | '__|/ _` |/ __|| __|| '__|| | | | / __|| __|| | | || '__|/ _ \
+#  | | | | | ||  _|| |  | (_| |\__ \| |_ | |   | |_| || (__ | |_ | |_| || |  |  __/
+# |___||_| |_||_|  |_|   \__,_||___/ \__||_|    \__,_| \___| \__| \__,_||_|   \___|
+#                                                                                  
+#
+
+{{#PHPMYADMIN_RUN}}
+  phpmyadmin:
+    image: {{PHPMYADMIN_IMAGE}}{{#PHPMYADMIN_IMAGETAG}}:{{PHPMYADMIN_IMAGETAG}}{{/PHPMYADMIN_IMAGETAG}}
+    hostname: "{{RUN_HOSTNAME}}"
+    domainname: "{{RUN_DOMAIN}}"
+    volumes:
+      - ./configs/phpmyadmin/servers.json:/etc/phpmyadmin/config.user.inc.php
+    depends_on:
+      - mysql
+    networks:
+      - default
+    ports:
+      - 127.0.0.1:55101:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=devel
+{{/PHPMYADMIN_RUN}}
+
+  mysql:
+    image: {{MYSQL_IMAGE}}{{#MYSQL_IMAGETAG}}:{{MYSQL_IMAGETAG}}{{/MYSQL_IMAGETAG}}
+    hostname: "{{RUN_HOSTNAME}}"
+    domainname: "{{RUN_DOMAIN}}"
+    volumes:
+{{#MYSQL_USEDATAVOLUME}}
+      - mysql-data:/var/lib/mysql:Z
+{{/MYSQL_USEDATAVOLUME}}
+      - ./dbseed/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - default
+    ports:
+      - 127.0.0.1:55100:3306/tcp
+    environment:
+      - MARIADB_ROOT_PASSWORD=devel
