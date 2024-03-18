@@ -28,6 +28,8 @@
 
 ## Installation
 
+Configure .env file, .env.example already compatible with local environment.
+
 ```bash
 $ npm install
 ```
