@@ -3,63 +3,80 @@ import { appContext } from "../app.context";
 import { getApiUrl } from "../helpers/get-api-url"
 import { getAuthHeader } from "../helpers/get-auth-header"
 import { AuthUserData } from "../types/auth-user-data";
+import { useNavigate } from "react-router-dom";
 
 function Signin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { setUser } = useContext(appContext);
   const [error, setError] = useState("")
-
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const HandleSingIn = async (e: any) => {
-    e.preventDefault();
+    try {
+      setLoading(true);
+      e.preventDefault();
 
-    const body = {
-      username: email,
-      password
-    };
+      const body = {
+        username: email,
+        password
+      };
 
-    const authRequest = await fetch(`${getApiUrl()}/auth/login`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json"
+      const authRequest = await fetch(`${getApiUrl()}/auth/login`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (authRequest.status >= 300) {
+        const errorResponse = await authRequest.json();
+        setError(`${authRequest.status} ${authRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
+        return;
       }
-    });
 
-    if (authRequest.status >= 300) {
-      const errorResponse = await authRequest.json();
-      setError(`${authRequest.status } ${authRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
-      return;
-    }
+      const authResponse: AuthUserData = await authRequest.json();
 
-    const authResponse: AuthUserData = await authRequest.json();
+      const userDataRequest = await fetch(`${getApiUrl()}/users/${authResponse.id}`, {
+        method: "GET",
+        headers: {
+          ...getAuthHeader(authResponse.token)
+        }
+      });
 
-    const userDataRequest = await fetch(`${getApiUrl()}/users/${authResponse.id}`, {
-      method: "GET",
-      headers: {
-        ...getAuthHeader(authResponse.token)
+      if (userDataRequest.status >= 300) {
+        const errorResponse = await userDataRequest.json();
+        setError(`${userDataRequest.status} ${userDataRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
+        return;
       }
-    });
+      const userDataResponse = await userDataRequest.json();
 
-    if (userDataRequest.status >= 300) {
-      const errorResponse = await userDataRequest.json();
-      setError(`${userDataRequest.status } ${userDataRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
-      return;
+      setUser({
+        authData: authResponse,
+        userData: userDataResponse
+      });
+
+      navigate('/user', { replace: true});
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    const userDataResponse = await userDataRequest.json();
-
-    setUser({
-      authData: authResponse,
-      userData: userDataResponse
-    });
-
-    
   }
 
   return (
     <>
-      <div className="flex justify-center flex-col items-center">
+      <div className="flex justify-center flex-col items-center relative">
+        { loading 
+        ? <div className="absolute w-1/3 h-full bg-gray-300 rounded bg-opacity-80 p-5 font-semibold text-xl flex justify-center items-center flex-col">
+            <p className="text-purple-500">Can take more that 50 seconds.</p>
+            <p className="text-purple-500">Render.com free plan limitation.</p>
+          </div>
+          : ""
+        }        
         <h1 className="uppercase font-bold px-3 text-purple-500 text-xl">Sign in</h1>
         <form className="w-1/3">
           <div className="my-2">
@@ -87,10 +104,10 @@ function Signin() {
           </div>
         </form>
         {error
-        ? <div className="w-1/3 text-red-600 font-semibold">
-          { error }
-        </div>
-        : ""}
+          ? <div className="w-1/3 text-red-600 font-semibold">
+            {error}
+          </div>
+          : ""}
       </div>
     </>
   )

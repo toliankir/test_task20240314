@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getApiUrl } from "../helpers/get-api-url"
 import { NewUserData } from "../types/user-data";
+import { useNavigate } from 'react-router-dom';
 
 function Signup() {
   const [email, setEmail] = useState("");
@@ -8,41 +9,58 @@ function Signup() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const HandleSingUp = async (e: any) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    setError("");
+      setError("");
 
-    const body: NewUserData = {
-      name: name,
-      password: password,
-      email: email,
-    };
+      const body: NewUserData = {
+        name: name,
+        password: password,
+        email: email,
+      };
 
-    if (phone) {
-      body.phone = phone;
-    }
-
-    const authRequest = await fetch(`${getApiUrl()}/users`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json"
+      if (phone) {
+        body.phone = phone;
       }
-    });
 
-    if (authRequest.status >= 300) {
-      const errorResponse = await authRequest.json();
-      setError(`${authRequest.status} ${authRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
-      return;
+      const authRequest = await fetch(`${getApiUrl()}/users`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (authRequest.status >= 300) {
+        const errorResponse = await authRequest.json();
+        setError(`${authRequest.status} ${authRequest.statusText}: ${Array.isArray(errorResponse.message) ? errorResponse.message.join(', ') : errorResponse.message}`);
+        return;
+      }
+
+      navigate('/');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <>
       <div className="flex justify-center flex-col items-center">
+        {loading
+          ? <div className="absolute w-1/3 h-full bg-gray-300 rounded bg-opacity-80 p-5 font-semibold text-xl flex justify-center items-center flex-col">
+            <p className="text-purple-500">Can take more that 50 seconds.</p>
+            <p className="text-purple-500">Render.com free plan limitation.</p>
+          </div>
+          : ""
+        }
         <h1 className="uppercase font-bold px-3 text-purple-500 text-xl">Sign up</h1>
         <form className="w-1/3">
           <div className="my-2">
